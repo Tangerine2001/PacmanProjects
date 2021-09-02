@@ -91,7 +91,67 @@ def depthFirstSearch(problem):
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    from game import Actions
+    from game import Directions
+    from game import Configuration
+    import pdb
+
+    # path will be a list of Actions. Will change every action and backtrack to last_index.
+    path = []
+    last_index = 0
+
+    # current_pos is the current position. Will change every action and backtrack
+    current_pos = problem.getStartState()
+
+    # successors is just a temp variable to simplify code. Represents the available tiles nearby.
+    successors = problem.getSuccessors(current_pos)
+
+    # previous_pos tracks the last position that had more than one path. This way we can "teleport" to it.
+    # Each backtrack teleports to the last element in the list, which is then removed from the array.
+    if not problem.isGoalState(problem.getStartState()) and len(successors) > 2:
+        previous_pos = [problem.getStartState()]
+
+    # current_direction is the direction the pacman will go if he moves in that direction.
+    if len(successors) > 0:
+        current_direction = successors[0][1]
+    else:
+        # return an empty path if there are no successors
+        return path
+
+    #pdb.set_trace()
+
+    # Perform depth-first until goal state is reached.
+    while not problem.isGoalState(current_pos) or current_direction == 'Stop':
+        possible_actions = Actions().getPossibleActions(Configuration(current_pos, current_direction), problem.walls)
+
+        if not len(possible_actions) > 1:
+            # Returns the last path if there were no solutions
+            return path
+
+        if possible_actions[0] != Actions.reverseDirection(current_direction):
+            action = possible_actions[0]
+        else:
+            action = possible_actions[1]
+        action_to_take = Actions.directionToVector(action)
+
+        path.append(action_to_take)
+        current_direction = action_to_take
+
+        temp_pos = (current_pos[0] + action_to_take[0],
+                    current_pos[1] + action_to_take[1])
+        current_pos = temp_pos
+
+    return path
+
+    # print("Start:", problem.getStartState())
+    # print("Start type:", type(problem))
+    # print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
+    # print("Start's successors:", problem.getSuccessors(problem.getStartState()))
+    # print("successor type:", type(problem.getSuccessors(problem.getStartState())))
+    #
+    # print("Possible Actions:")
+
+    # util.raiseNotDefined()
 
 
 def breadthFirstSearch(problem):
