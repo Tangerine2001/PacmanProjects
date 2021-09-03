@@ -92,66 +92,62 @@ def depthFirstSearch(problem):
     """
     "*** YOUR CODE HERE ***"
     from game import Actions
-    from game import Directions
-    from game import Configuration
-    import pdb
 
-    # path will be a list of Actions. Will change every action and backtrack to last_index.
+    # path will be a list of vectors. Will change every action and backtrack.
     path = []
-    last_index = 0
 
     # current_pos is the current position. Will change every action and backtrack
     current_pos = problem.getStartState()
 
-    # successors is just a temp variable to simplify code. Represents the available tiles nearby.
-    successors = problem.getSuccessors(current_pos)
-
-    # previous_pos tracks the last position that had more than one path. This way we can "teleport" to it.
-    # Each backtrack teleports to the last element in the list, which is then removed from the array.
-    if not problem.isGoalState(problem.getStartState()) and len(successors) > 2:
-        previous_pos = [problem.getStartState()]
-
     # current_direction is the direction the pacman will go if he moves in that direction.
-    if len(successors) > 0:
-        current_direction = successors[0][1]
+    if len(problem.getSuccessors(current_pos)) > 0:
+        current_direction = problem.getSuccessors(current_pos)[0][1]
     else:
-        # return an empty path if there are no successors
+        # return an empty path if there are no successors.
         return path
 
-    #pdb.set_trace()
+    # pos_dir will store that directions traveled from a specific point.
+    pos_dir = {current_pos: []}
 
     # Perform depth-first until goal state is reached.
-    while not problem.isGoalState(current_pos) or current_direction == 'Stop':
-        possible_actions = Actions().getPossibleActions(Configuration(current_pos, current_direction), problem.walls)
+    while not problem.isGoalState(current_pos):
+        # Gets all of the possible moves for the current position, including the reverse direction
+        possible_moves = [successor[1] for successor in problem.getSuccessors(current_pos)]
 
-        if not len(possible_actions) > 1:
-            # Returns the last path if there were no solutions
-            return path
+        # Gets all of the possible actions. Excludes previously visited and opposite direction vectors
+        possible_actions = [direction for direction in possible_moves if direction not in pos_dir[current_pos] and
+                            direction != Actions.reverseDirection(current_direction) and
+                            movePac(current_pos, Actions.directionToVector(direction)) not in pos_dir.keys()]
 
-        if possible_actions[0] != Actions.reverseDirection(current_direction):
-            action = possible_actions[0]
-        else:
-            action = possible_actions[1]
-        action_to_take = Actions.directionToVector(action)
+        # If there are no viable actions from the current position, backtrack
+        while len(possible_actions) < 1:
+            current_pos = (current_pos[0] - path[-1][0],
+                           current_pos[1] - path[-1][1])
+            path.pop()
+            current_direction = Actions.vectorToDirection(path[-1])
+            possible_moves = [successor[1] for successor in problem.getSuccessors(current_pos)]
+            possible_actions = [direction for direction in possible_moves if direction not in pos_dir[current_pos] and
+                                direction != Actions.reverseDirection(current_direction) and
+                                movePac(current_pos, Actions.directionToVector(direction)) not in pos_dir.keys()]
 
+        current_direction = possible_actions[0]
+
+        pos_dir[current_pos].append(current_direction)
+        action_to_take = Actions.directionToVector(current_direction)
         path.append(action_to_take)
-        current_direction = action_to_take
 
-        temp_pos = (current_pos[0] + action_to_take[0],
-                    current_pos[1] + action_to_take[1])
-        current_pos = temp_pos
+        current_pos = movePac(current_pos, action_to_take)
 
-    return path
+        if current_pos not in pos_dir.keys():
+            pos_dir[current_pos] = []
 
-    # print("Start:", problem.getStartState())
-    # print("Start type:", type(problem))
-    # print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
-    # print("Start's successors:", problem.getSuccessors(problem.getStartState()))
-    # print("successor type:", type(problem.getSuccessors(problem.getStartState())))
-    #
-    # print("Possible Actions:")
+    # Path is a list of movement vectors, so we have to convert them to their actual coordinates.
+    final = [Actions.vectorToDirection(vec) for vec in path]
+    return final
 
-    # util.raiseNotDefined()
+
+def movePac(pos: tuple, vec: tuple) -> tuple:
+    return pos[0] + vec[0], pos[1] + vec[1]
 
 
 def breadthFirstSearch(problem):
@@ -159,7 +155,55 @@ def breadthFirstSearch(problem):
     Search the shallowest nodes in the search tree first.
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    import pdb
+    from copy import copy
+
+    # current_pos is the current position.
+    current_pos = problem.getStartState()
+
+    # paths will be a list of lists of vectors
+    paths = [[current_pos]]
+
+    # traveled_pos keeps tracks of all of the traveled points so as to not traverse them again
+    traveled_pos = [current_pos]
+
+    while True:
+        pdb.set_trace()
+        temp_paths = []
+        for path in paths:
+            # Sets the current position to the last place in the path.
+            current_pos = path[-1]
+
+            # Gets all the successors for the last point in the path.
+            possible_pos = [(path, successor[0]) for successor in problem.getSuccessors(current_pos)
+                            if successor[0] not in traveled_pos]
+
+            # If no successors, delete the path.
+            if len(possible_pos) < 1:
+                paths.remove(path)
+                continue
+
+            for potential in possible_pos:
+                if problem.isGoalState(potential[1]):
+                    path.append(potential[1])
+                    final = stateToDirections(path)
+                    return final
+                temp = copy(potential[0])
+                temp.append(potential[1])
+                new_path = temp
+                temp_paths.append(new_path)
+                traveled_pos.append(potential[1])
+        paths = copy(temp_paths)
+
+
+def stateToDirections(path: list) -> list:
+    from game import Actions
+    final_path = []
+    for i in range(len(path) - 1):
+        vec = (path[i+1][0] - path[i][0],
+               path[i+1][1] - path[i][1])
+        final_path.append(Actions.vectorToDirection(vec))
+    return final_path
 
 
 def uniformCostSearch(problem):
