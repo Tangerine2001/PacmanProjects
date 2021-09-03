@@ -91,6 +91,7 @@ def depthFirstSearch(problem):
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
     "*** YOUR CODE HERE ***"
+    import pdb
     from game import Actions
 
     # path will be a list of vectors. Will change every action and backtrack.
@@ -114,6 +115,7 @@ def depthFirstSearch(problem):
         # Gets all of the possible moves for the current position, including the reverse direction
         possible_moves = [successor[1] for successor in problem.getSuccessors(current_pos)]
 
+        pdb.set_trace()
         # Gets all of the possible actions. Excludes previously visited and opposite direction vectors
         possible_actions = [direction for direction in possible_moves if direction not in pos_dir[current_pos] and
                             direction != Actions.reverseDirection(current_direction) and
@@ -142,6 +144,7 @@ def depthFirstSearch(problem):
             pos_dir[current_pos] = []
 
     # Path is a list of movement vectors, so we have to convert them to their actual coordinates.
+    pdb.set_trace()
     final = [Actions.vectorToDirection(vec) for vec in path]
     return final
 
@@ -168,31 +171,31 @@ def breadthFirstSearch(problem):
     traveled_pos = [current_pos]
 
     while True:
-        pdb.set_trace()
+        # pdb.set_trace()
         temp_paths = []
         for path in paths:
             # Sets the current position to the last place in the path.
             current_pos = path[-1]
 
             # Gets all the successors for the last point in the path.
-            possible_pos = [(path, successor[0]) for successor in problem.getSuccessors(current_pos)
+            possible_pos = [successor[0] for successor in problem.getSuccessors(current_pos)
                             if successor[0] not in traveled_pos]
 
             # If no successors, delete the path.
             if len(possible_pos) < 1:
-                paths.remove(path)
                 continue
-
-            for potential in possible_pos:
-                if problem.isGoalState(potential[1]):
-                    path.append(potential[1])
-                    final = stateToDirections(path)
-                    return final
-                temp = copy(potential[0])
-                temp.append(potential[1])
-                new_path = temp
-                temp_paths.append(new_path)
-                traveled_pos.append(potential[1])
+            else:
+                for potential in possible_pos:
+                    if problem.isGoalState(potential):
+                        # pdb.set_trace()
+                        path.append(potential)
+                        final = stateToDirections(path)
+                        return final
+                    temp = copy(path)
+                    temp.append(potential)
+                    new_path = temp
+                    temp_paths.append(new_path)
+                    traveled_pos.append(potential)
         paths = copy(temp_paths)
 
 
