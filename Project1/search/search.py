@@ -92,65 +92,59 @@ def depthFirstSearch(problem):
     """
     "*** YOUR CODE HERE ***"
     import pdb
-    from game import Actions
+    from copy import copy
 
-    # path will be a list of vectors. Will change every action and backtrack.
+    # path will be the list of actions to take.
     path = []
 
-    # current_pos is the current position. Will change every action and backtrack
-    current_pos = problem.getStartState()
+    # curr is the current position of the path
+    curr = problem.getStartState()
 
-    # current_direction is the direction the pacman will go if he moves in that direction.
-    if len(problem.getSuccessors(current_pos)) > 0:
-        current_direction = problem.getSuccessors(current_pos)[0][1]
-    else:
-        # return an empty path if there are no successors.
-        return path
+    # visited is the list of all visited nodes
+    visited = [curr]
 
-    # pos_dir will store that directions traveled from a specific point.
-    pos_dir = {current_pos: []}
+    # track is the track the pacman takes. used for backtracking indices
+    track = [curr]
 
-    # Perform depth-first until goal state is reached.
-    while not problem.isGoalState(current_pos):
-        # Gets all of the possible moves for the current position, including the reverse direction
-        possible_moves = [successor[1] for successor in problem.getSuccessors(current_pos)]
+    # next_curr remembers the node that each key came from
+    next_curr = {}
 
-        pdb.set_trace()
-        # Gets all of the possible actions. Excludes previously visited and opposite direction vectors
-        possible_actions = [direction for direction in possible_moves if direction not in pos_dir[current_pos] and
-                            direction != Actions.reverseDirection(current_direction) and
-                            movePac(current_pos, Actions.directionToVector(direction)) not in pos_dir.keys()]
+    # expand acts as a stack to expand new nodes.
+    expand = []
 
-        # If there are no viable actions from the current position, backtrack
-        while len(possible_actions) < 1:
-            current_pos = (current_pos[0] - path[-1][0],
-                           current_pos[1] - path[-1][1])
-            path.pop()
-            current_direction = Actions.vectorToDirection(path[-1])
-            possible_moves = [successor[1] for successor in problem.getSuccessors(current_pos)]
-            possible_actions = [direction for direction in possible_moves if direction not in pos_dir[current_pos] and
-                                direction != Actions.reverseDirection(current_direction) and
-                                movePac(current_pos, Actions.directionToVector(direction)) not in pos_dir.keys()]
+    while not problem.isGoalState(curr):
+        # pdb.set_trace()
+        succ = problem.getSuccessors(curr)
 
-        current_direction = possible_actions[0]
+        viable = [points for points in succ if points[0] not in visited][::-1]
 
-        pos_dir[current_pos].append(current_direction)
-        action_to_take = Actions.directionToVector(current_direction)
-        path.append(action_to_take)
+        if len(viable) < 1:
+            # Commence backtracking
 
-        current_pos = movePac(current_pos, action_to_take)
+            # Grabs next node to test
+            next_pos = expand.pop()
+            curr = next_pos[0]
 
-        if current_pos not in pos_dir.keys():
-            pos_dir[current_pos] = []
+            # Gets the node it came from
+            expanded = next_curr[next_pos[0]]
 
-    # Path is a list of movement vectors, so we have to convert them to their actual coordinates.
-    pdb.set_trace()
-    final = [Actions.vectorToDirection(vec) for vec in path]
-    return final
+            # Resets necessary objects
+            index = track.index(expanded)
+            track = track[0:index + 1]
+            path = path[0:index]
 
+        else:
+            for v in viable:
+                expand.append(v)
+                next_curr[v[0]] = curr
+            next_pos = expand.pop()
+            curr = next_pos[0]
 
-def movePac(pos: tuple, vec: tuple) -> tuple:
-    return pos[0] + vec[0], pos[1] + vec[1]
+        # Update necessary objects
+        path.append(next_pos[1])
+        visited.append(curr)
+        track.append(curr)
+    return path
 
 
 def breadthFirstSearch(problem):
@@ -158,55 +152,49 @@ def breadthFirstSearch(problem):
     Search the shallowest nodes in the search tree first.
     """
     "*** YOUR CODE HERE ***"
-    import pdb
     from copy import copy
 
-    # current_pos is the current position.
-    current_pos = problem.getStartState()
+    # curr is the current position
+    curr = problem.getStartState()
 
-    # paths will be a list of lists of vectors
-    paths = [[current_pos]]
+    # paths will be a list of lists of paths
+    paths = [[curr]]
+
+    # dir will be a dictionary of directions
+    dir = {}
 
     # traveled_pos keeps tracks of all of the traveled points so as to not traverse them again
-    traveled_pos = [current_pos]
+    traveled_pos = [curr]
 
     while True:
-        # pdb.set_trace()
+        # Creates a temp object for paths so that the foreach loop doesn't mess up
         temp_paths = []
         for path in paths:
-            # Sets the current position to the last place in the path.
-            current_pos = path[-1]
+            # Sets the new curr node
+            curr = path[-1]
 
-            # Gets all the successors for the last point in the path.
-            possible_pos = [successor[0] for successor in problem.getSuccessors(current_pos)
-                            if successor[0] not in traveled_pos]
+            if problem.isGoalState(curr):
+                path.pop(0)
+                final = [dir[p] for p in path]
 
-            # If no successors, delete the path.
-            if len(possible_pos) < 1:
+                return final
+
+            succ = problem.getSuccessors(curr)
+
+            viable = [point for point in succ if point[0] not in traveled_pos]
+            if len(viable) < 1:
                 continue
-            else:
-                for potential in possible_pos:
-                    if problem.isGoalState(potential):
-                        # pdb.set_trace()
-                        path.append(potential)
-                        final = stateToDirections(path)
-                        return final
-                    temp = copy(path)
-                    temp.append(potential)
-                    new_path = temp
-                    temp_paths.append(new_path)
-                    traveled_pos.append(potential)
+
+            for v in viable:
+                temp = copy(path)
+                temp.append(v[0])
+                new_path = temp
+
+                dir[v[0]] = v[1]
+
+                temp_paths.append(new_path)
+                traveled_pos.append(v[0])
         paths = copy(temp_paths)
-
-
-def stateToDirections(path: list) -> list:
-    from game import Actions
-    final_path = []
-    for i in range(len(path) - 1):
-        vec = (path[i+1][0] - path[i][0],
-               path[i+1][1] - path[i][1])
-        final_path.append(Actions.vectorToDirection(vec))
-    return final_path
 
 
 def uniformCostSearch(problem):
@@ -214,6 +202,18 @@ def uniformCostSearch(problem):
     Search the node of least total cost first.
     """
     "*** YOUR CODE HERE ***"
+
+    # curr tracks the current position of the path
+    curr = problem.getStartState()
+
+    # exp_q hold the order in which to execute node exploration.
+    exp_q = util.PriorityQueue()
+
+    while not problem.isGoalState(curr):
+        succ = problem.getSuccessors(curr)
+
+
+
     util.raiseNotDefined()
 
 
