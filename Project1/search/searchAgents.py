@@ -413,14 +413,17 @@ def cornersHeuristic(state, problem):
         # 1.8 0.9 1061
         # 1.8 0.9 1050
         # 1.8 0.8 1042
-        # Manhattan 1745
+        # Manhattan 1745 1357 if max()
         # Euclidean 1833
+        # avg       1788
+        # /12       1393
+        # /13       1344
         # hyp = 1.8 * abs(x - corner[0]) + abs(y - corner[1]) + 0.8 * math.sqrt(((x - corner[0]) ** 2 + (y - corner[1]) ** 2))
-        hyp = (abs(x - corner[0]) + abs(y - corner[1]) + math.sqrt(((x - corner[0]) ** 2 + (y - corner[1]) ** 2))) / 2
+        hyp = (abs(x - corner[0]) + abs(y - corner[1]))
         # hyp = math.sqrt(((x - corner[0]) ** 2 + (y - corner[1]) ** 2))
         dist.append(hyp)
     "*** YOUR CODE HERE ***"
-    return min(dist) if len(dist) > 0 else 0
+    return max(dist) if len(dist) > 0 else 0
     # return min(dist) if len(dist) > 0 else 0  # Default to trivial solution
 
 
