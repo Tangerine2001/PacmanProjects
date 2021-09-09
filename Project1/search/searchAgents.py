@@ -35,6 +35,8 @@ project description for details.
 
 Good luck and happy searching!
 """
+import math
+
 from game import Directions
 from game import Agent
 from game import Actions
@@ -315,12 +317,12 @@ class CornersProblem(search.SearchProblem):
     def getStartState(self):
         "Returns the start state (in your state space, not the full Pacman state space)"
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.startingPosition, []
 
     def isGoalState(self, state):
         "Returns whether this search state is a goal state of the problem"
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return len(state[1]) == 4
 
     def getSuccessors(self, state):
         """
@@ -335,15 +337,18 @@ class CornersProblem(search.SearchProblem):
         """
 
         successors = []
+        x, y = state[0]
         for action in [Directions.EAST, Directions.WEST, Directions.NORTH, Directions.SOUTH]:
-            # Add a successor state to the successor list if the action is legal
-            # Here's a code snippet for figuring out whether a new position hits a wall:
-            #   x,y = currentPosition
-            #   dx, dy = Actions.directionToVector(action)
-            #   nextx, nexty = int(x + dx), int(y + dy)
-            #   hitsWall = self.walls[nextx][nexty]
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
+            hitsWall = self.walls[nextx][nexty]
 
-            "*** YOUR CODE HERE ***"
+            if not hitsWall:
+                point = (nextx, nexty)
+                addVisited = state[1]
+                if point in self.corners and point not in addVisited:
+                    addVisited = state[1] + [point]
+                successors.append([(point, addVisited), action, 1])
 
         self._expanded += 1
         return successors
@@ -386,11 +391,37 @@ def cornersHeuristic(state, problem):
 
     Submissions with mazeDistance will receive a 0 for this question.
     """
+    import pdb
+    # python pacman.py -l mediumCorners -p SearchAgent -a fn=ucs,prob=CornersProblem,heuristic=cornersHeuristic -z 0.5
+    # python pacman.py -l mediumCorners -p SearchAgent -a fn=aStarSearch,prob=CornersProblem,heuristic=cornersHeuristic -z 0.5
+
     corners = problem.corners  # These are the corner coordinates
     walls = problem.walls  # These are the walls of the maze, as a Grid (game.py)
 
+    # pdb.set_trace()
+    x, y = state[0]
+    cornersFound = state[1]
+    viableCorners = [c for c in corners if c not in cornersFound]
+    dist = []
+    for corner in viableCorners:
+        # After trial and error with the weights, here are the results:
+        # 2   1   1181
+        # 2.5 1   1342
+        # 1.5 1   1287
+        # 1.9 1   1156
+        # 1.8 1   1156
+        # 1.8 0.9 1061
+        # 1.8 0.9 1050
+        # 1.8 0.8 1042
+        # Manhattan 1745
+        # Euclidean 1833
+        # hyp = 1.8 * abs(x - corner[0]) + abs(y - corner[1]) + 0.8 * math.sqrt(((x - corner[0]) ** 2 + (y - corner[1]) ** 2))
+        hyp = (abs(x - corner[0]) + abs(y - corner[1]) + math.sqrt(((x - corner[0]) ** 2 + (y - corner[1]) ** 2))) / 2
+        # hyp = math.sqrt(((x - corner[0]) ** 2 + (y - corner[1]) ** 2))
+        dist.append(hyp)
     "*** YOUR CODE HERE ***"
-    return 0  # Default to trivial solution
+    return min(dist) if len(dist) > 0 else 0
+    # return min(dist) if len(dist) > 0 else 0  # Default to trivial solution
 
 
 class AStarCornersAgent(SearchAgent):

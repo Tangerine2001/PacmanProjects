@@ -91,8 +91,6 @@ def depthFirstSearch(problem):
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
     "*** YOUR CODE HERE ***"
-    import pdb
-    from copy import copy
 
     # path will be the list of actions to take.
     path = []
@@ -152,49 +150,22 @@ def breadthFirstSearch(problem):
     Search the shallowest nodes in the search tree first.
     """
     "*** YOUR CODE HERE ***"
-    from copy import copy
+    # curr tracks the current position of the path
+    currState, currPath = problem.getStartState(), []
 
-    # curr is the current position
-    curr = problem.getStartState()
+    # visited keeps track of visited positions
+    visited = [currState]
 
-    # paths will be a list of lists of paths
-    paths = [[curr]]
+    # pq is the priority queue of nodes to explore
+    pq = util.PriorityQueue()
 
-    # dir will be a dictionary of directions
-    dir = {}
-
-    # traveled_pos keeps tracks of all of the traveled points so as to not traverse them again
-    traveled_pos = [curr]
-
-    while True:
-        # Creates a temp object for paths so that the foreach loop doesn't mess up
-        temp_paths = []
-        for path in paths:
-            # Sets the new curr node
-            curr = path[-1]
-
-            if problem.isGoalState(curr):
-                path.pop(0)
-                final = [dir[p] for p in path]
-
-                return final
-
-            succ = problem.getSuccessors(curr)
-
-            viable = [point for point in succ if point[0] not in traveled_pos]
-            if len(viable) < 1:
-                continue
-
-            for v in viable:
-                temp = copy(path)
-                temp.append(v[0])
-                new_path = temp
-
-                dir[v[0]] = v[1]
-
-                temp_paths.append(new_path)
-                traveled_pos.append(v[0])
-        paths = copy(temp_paths)
+    while not problem.isGoalState(currState):
+        for succ in problem.getSuccessors(currState):
+            if succ[0] not in visited:
+                visited.append(succ[0])
+                pq.push((succ[0], currPath + [succ[1]]), succ[2])
+        currState, currPath = pq.pop()
+    return currPath
 
 
 def uniformCostSearch(problem):
@@ -202,19 +173,26 @@ def uniformCostSearch(problem):
     Search the node of least total cost first.
     """
     "*** YOUR CODE HERE ***"
-
     # curr tracks the current position of the path
-    curr = problem.getStartState()
+    currState, currPath, currCost = problem.getStartState(), [], 0
 
-    # exp_q hold the order in which to execute node exploration.
-    exp_q = util.PriorityQueue()
+    # visited keeps track of visited positions
+    visited = [currState]
 
-    while not problem.isGoalState(curr):
-        succ = problem.getSuccessors(curr)
+    # pq is the priority queue of nodes to explore
+    pq = util.PriorityQueue()
 
+    while not problem.isGoalState(currState):
+        for succ in problem.getSuccessors(currState):
+            if succ[0] not in visited:
+                cost = currCost + succ[2]
+                pq.push((succ[0], currPath + [succ[1]], cost), cost)
 
+        while currState in visited:
+            currState, currPath, currCost = pq.pop()
 
-    util.raiseNotDefined()
+        visited.append(currState)
+    return currPath
 
 
 def nullHeuristic(state, problem=None):
@@ -230,7 +208,26 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     Search the node that has the lowest combined cost and heuristic first.
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    # curr tracks the current position of the path
+    currState, currPath, currCost = problem.getStartState(), [], 0
+
+    # visited keeps track of visited positions
+    visited = [currState]
+
+    # pq is the priority queue of nodes to explore
+    pq = util.PriorityQueue()
+
+    while not problem.isGoalState(currState):
+        for succ in problem.getSuccessors(currState):
+            if succ[0] not in visited:
+                cost = currCost + succ[2]
+                pq.push((succ[0], currPath + [succ[1]], cost), cost + heuristic(succ[0], problem))
+
+        while currState in visited:
+            currState, currPath, currCost = pq.pop()
+
+        visited.append(currState)
+    return currPath
 
 
 # Abbreviations
