@@ -494,7 +494,6 @@ def foodHeuristic(state, problem):
     """
     # python pacman.py -l trickySearch -p AStarFoodSearchAgent
     import pdb
-    # pdb.set_trace()
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
     curr, cost = position, 0
@@ -502,19 +501,29 @@ def foodHeuristic(state, problem):
     heuristic = 0
     pq = util.PriorityQueue()
     tree = {curr: 0}
+    removeFirst = False
 
+    # Builds an MST (minimum spanning tree) using Prim's algorithm
     while len(food) > 0:
         for f in food:
             dist = util.manhattanDistance(curr, f)
             if f not in tree:
-                pq.push((f, cost + dist), cost + dist)
+                pq.push((f, dist), dist)
 
-        while curr in tree:
+        while curr in tree.keys():
             curr, cost = pq.pop()
+        heuristic += cost
 
+        # Remove the the starting node from the tree. That way, the MST starts building from the closest Food
+        # That is the only way to maintain consistency
+        if not removeFirst:
+            removeFirst = True
+            pq.heap.clear()
+
+        # Add the node to the tree and remove the node from the list of foods to add to the MST
         tree[curr] = cost
         food.remove(curr)
-    return cost
+    return heuristic
     # while len(food) > 0:
     #     # Gets the distance from the current node to each of the food nodes
     #     foodDistList = []
