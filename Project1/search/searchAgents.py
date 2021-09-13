@@ -630,6 +630,7 @@ class ApproximateSearchAgent(Agent):
         self.food = state.getFood()
         self.walls = state.getWalls()
         self.start = state.getPacmanPosition()
+        self.curr = (self.start, [])
 
     def getAction(self, state):
         """
@@ -638,8 +639,24 @@ class ApproximateSearchAgent(Agent):
         Directions.{North, South, East, West, Stop}
         """
         "*** YOUR CODE HERE ***"
-        curr = 0
-        util.raiseNotDefined()
+        # Actual Ctrl+C, Ctrl+V of my BFS solution
+        currState, currPath = self.start, []
+        visited = [currState]
+        pq = util.PriorityQueue()
+        while not self.isGoalState(currState):
+            for succ in state.getSuccessors(currState):
+                if succ[0] not in visited:
+                    visited.append(succ[0])
+                    pq.push((succ[0], currPath + [succ[1]]), succ[2])
+            currState, currPath = pq.pop()
+        return currPath
+
+    def getSuccessors(self, state):
+        # TODO
+        crr = 0
+
+    def isGoalState(self, state):
+        return len(self.food.asList()) == 0
 
 
 def mazeDistance(point1, point2, gameState):
