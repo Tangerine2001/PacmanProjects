@@ -508,6 +508,21 @@ def foodHeuristic(state, problem):
         for f in food:
             dist = util.manhattanDistance(curr, f)
             if f not in tree:
+                for wall in problem.walls.asList():
+                    # Checks if there is any wall in between. Adds 2 if there is at least one wall
+                    if min(curr[0], f[0]) < wall[0] < max(curr[0], f[0]):
+                        if min(curr[1], f[1]) < wall[1] < max(curr[1], f[1]):
+                            dist += 2
+                            break
+                        elif curr[1] == f[1]:
+                            if wall[1] == f[1]:
+                                dist += 2
+                                break
+                    elif curr[0] == f[0]:
+                        if wall[0] == f[0] and min(curr[1], f[1]) < wall[1] < max(curr[1], f[1]):
+                            dist += 2
+                            break
+
                 pq.push((f, dist), dist)
 
         while curr in tree.keys():
@@ -636,10 +651,11 @@ class ApproximateSearchAgent(Agent):
         "*** YOUR CODE HERE ***"
         # python pacman.py -l bigSearch -p ApproximateSearchAgent -z .5 -q
         # (only include -q to test under 30 seconds)
-        self.food = state.getFood()
+        self.food = state.getFood().asList()
         self.walls = state.getWalls()
         self.start = state.getPacmanPosition()
-        self.curr = (self.start, [])
+        self.actions = []
+        self.curr = self.start
 
     def getAction(self, state):
         """
@@ -649,23 +665,95 @@ class ApproximateSearchAgent(Agent):
         """
         "*** YOUR CODE HERE ***"
         # Actual Ctrl+C, Ctrl+V of my BFS solution
-        currState, currPath = self.start, []
-        visited = [currState]
-        pq = util.PriorityQueue()
+        import pdb
+        # pdb.set_trace()
+        currState = self.curr
+        firstBack = False
+        if currState == (22, 10):
+            firstBack = True
+            # pdb.set_trace()
+        print(f"Current position: {currState}")
+        #if firstBack:
+            #pdb.set_trace()
+        if len(self.actions) > 0:
+            # pdb.set_trace()
+            return self.actions.pop(0)
+
         while not self.isGoalState(currState):
-            for succ in state.getSuccessors(currState):
-                if succ[0] not in visited:
-                    visited.append(succ[0])
-                    pq.push((succ[0], currPath + [succ[1]]), succ[2])
-            currState, currPath = pq.pop()
-        return currPath
+            if len(self.actions) > 0:
+                # pdb.set_trace()
+                return self.actions.pop(0)
+            successors = self.getSuccessors(currState)
+            viable = []
+            for i in range(len(successors)):
+                if successors[i][0] in self.food:
+                    viable.append(successors[i])
+
+            if len(viable) > 0:
+                self.curr = viable[0][0]
+                self.food.remove(self.curr)
+                return viable[0][1]
+            else:
+                #pdb.set_trace()
+                start = time.perf_counter()
+                print("Backtracking...")
+                bfs = mazeDistanceModified(currState, self.food, self.getSuccessors)
+                self.actions = bfs[0]
+                self.curr = bfs[1]
+                self.food.remove(self.curr)
+                end = time.perf_counter()
+                print(f"Closest node found in: {end-start:0.2f} seconds")
+        return Directions.STOP
 
     def getSuccessors(self, state):
-        # TODO
-        crr = 0
+        successors = []
+        w = Directions.WEST
+        n = Directions.NORTH
+        s = Directions.SOUTH
+        e = Directions.EAST
+        # w, n, s, e -> 0.25, 323
+        # n, e, s, w -> 0.27, 343
+        # w, s, n, e -> 0.23, 323
+        # w, s, e, n -> 0.26, 340
+        # s, e, w, n -> 0.25, 340
+        # s, w, n, e -> 0.23, 340
+        # e, n, s, w -> 0.25, 334
+        # e, w, s, n -> 0.27, 353
+        for action in [w, n, s, e]:
+            x, y = state
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
+            if not self.walls[nextx][nexty]:
+                successors.append(((nextx, nexty), action))
+        return successors
 
     def isGoalState(self, state):
-        return len(self.food.asList()) == 0
+        return len(self.food) == 0
+
+def mazeDistanceModified(point1, food, getSuccessors):
+    """
+    Returns the maze distance between any two points, using the search functions
+    you have already built.  The gameState can be any game state -- Pacman's position
+    in that state is ignored.
+    Example usage: mazeDistance( (2,4), (5,6), gameState)
+    This might be a useful helper function for your ApproximateSearchAgent.
+    """
+    import pdb
+    # curr tracks the current position of the path
+    currState, currPath = point1, []
+    # visited keeps track of visited positions
+    visited = [currState]
+    # pq is the priority queue of nodes to explore
+    pq = []
+
+    while currState not in food:
+        # pdb.set_trace()
+        for succ in getSuccessors(currState):
+            if succ[0] not in visited:
+                visited.append(succ[0])
+                pq.append((succ[0], currPath + [succ[1]]))
+        currState, currPath = pq.pop(0)
+    return currPath, currState
 
 
 def mazeDistance(point1, point2, gameState):
@@ -682,4 +770,5 @@ def mazeDistance(point1, point2, gameState):
     assert not walls[x1][y1], 'point1 is a wall: ' + point1
     assert not walls[x2][y2], 'point2 is a wall: ' + str(point2)
     prob = PositionSearchProblem(gameState, start=point1, goal=point2, warn=False, visualize=False)
-    return len(search.bfs(prob))
+    path = search.bfs(prob)
+    return len(path), path
