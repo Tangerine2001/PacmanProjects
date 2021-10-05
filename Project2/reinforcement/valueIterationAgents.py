@@ -62,6 +62,8 @@ class ValueIterationAgent(ValueEstimationAgent):
 
     def runValueIteration(self):
         for i in range(self.iterations):
+            # This way we use the old version of the grid for utility values but update
+            # this new grid. Set old to new at the end of each iteration
             valuesCopy = self.values.copy()
             for state in self.mdp.getStates():
                 q = None
@@ -96,7 +98,8 @@ class ValueIterationAgent(ValueEstimationAgent):
             # q is now the expected value of the nextState.
             # self.discount * self.values[next] is the gamma coefficient
             # self.mdp.getReward(state, action, next) is the reward, in most cases, 0
-            # prob multiplied by their product get the expected value?
+            # Their sum is the Bellman Update.
+            # prob multiplied by their sum get the expected value?
             q += prob * (self.mdp.getReward(state, action, next) + self.discount * self.values[next])
         return q
 
