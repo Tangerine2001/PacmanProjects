@@ -41,6 +41,7 @@ class Perceptron(object):
             the value.
         """
         """YOUR CODE"""
+        return 1 / (1 + exp(-value))
 
     def sigmoidActivation(self, inActs):
         """
@@ -55,6 +56,7 @@ class Perceptron(object):
             The value of the sigmoid of the weighted input
         """
         """YOUR CODE"""
+        return self.sigmoid(self.getWeightedSum([1] + inActs))
 
     def sigmoidDeriv(self, value):
         """
@@ -68,6 +70,8 @@ class Perceptron(object):
             parametrized by the value.
         """
         """YOUR CODE"""
+        return self.sigmoid(value) * (1 - self.sigmoid(value))
+
 
     def sigmoidActivationDeriv(self, inActs):
         """
@@ -82,6 +86,7 @@ class Perceptron(object):
             The derivative of the sigmoid of the weighted input
         """
         """YOUR CODE"""
+        return self.sigmoidDeriv(self.getWeightedSum([1] + inActs))
 
     def updateWeights(self, inActs, alpha, delta):
         """
@@ -97,9 +102,24 @@ class Perceptron(object):
         Returns:
             float
             Return the total modification of all the weights (sum of each abs(modification))
+
+        [0.6264500000000001, 0.50317, 0.6291300000000001, 0.5795500000000001,
+         0.6432000000000001, 0.5735199999999999, 0.6545900000000001, 0.54002,
+         0.5614600000000001, 0.6150600000000002, 0.6746899999999999, 0.6646400000000001,
+         0.6009900000000001, 0.65593, 0.6579400000000001, 0.6385100000000001,
+         0.6432000000000001, 0.6981400000000001, 0.47302, 0.5728500000000001]
         """
         totalModification = 0
         """YOUR CODE"""
+        newWeights = []
+        actWithBias = [1] + inActs
+        for i in range(len(self.weights)):
+            weight = self.weights[i]
+            modification = alpha * delta * actWithBias[i]
+            newWeights.append(weight - modification)
+            totalModification += abs(modification)
+
+        self.weights = newWeights
         return totalModification
 
     def setRandomWeights(self):
@@ -173,6 +193,17 @@ class NeuralNet(object):
             lists of the output values of all perceptrons in each layer.
         """
         """YOUR CODE"""
+        outputVectors = [inActs]
+        newInActs = inActs.copy()
+        for i in range(len(self.layers)):
+            outputs = []
+            for perceptron in self.layers[i]:
+                outputs.append(perceptron.sigmoidActivation(newInActs))
+            newInActs = outputs.copy()
+            outputVectors += [newInActs.copy()]
+
+        return outputVectors
+
 
     def backPropLearning(self, examples, alpha):
         """
