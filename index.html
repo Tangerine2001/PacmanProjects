@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css?family=Lora|Montserrat|Prata|Chivo" rel="stylesheet">
+    <title>Pacman Projects</title>
+</head>
+<body>
+    <link rel="stylesheet" href="main.css">
+    <script src="https://kit.fontawesome.com/b7a527cb08.js" crossorigin="anonymous"></script>
+    <script src="main.js"></script>
+    <div class="sidebar">
+        <div class="sidebar-content">
+            <h1>
+                <a href="" class="sidebar-title">Pacman Projects</a>
+            </h1>
+            <p>
+                My Pacman Projects are a series of projects that I worked on for
+                my CS 3600 course at Georgia Institute of Technology, otherwise
+                known as the Intro to Artificial Intelligence course.
+                <a href="">Github</a>
+                 page.
+            </p>
+        </div>
+        <div class="link-container" id="links">
+            <div class="sidebar-links">
+                <div class="active" id="active">
+                    <i class="fas fa-caret-right"></i>
+                    <div class="bp-text" onclick="swapLinks('Home')">Home</div>
+                </div>
+                <div class="inactive">
+                    <i class="fas fa-caret-right"></i>
+                    <div class="bp-text" onclick="swapLinks('About')">About</div>
+                </div>
+                <div class="inactive">
+                    <i class="fas fa-caret-right"></i>
+                    <div class="bp-text" onclick="swapLinks('Project1')">Project1</div>
+                </div>
+                <div class="inactive">
+                    <i class="fas fa-caret-right"></i>
+                    <div class="bp-text" onclick="swapLinks('Project2')">Project2</div>
+                </div>
+                <div class="inactive">
+                    <i class="fas fa-caret-right"></i>
+                    <div class="bp-text" onclick="swapLinks('Project3')">Project3</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content">
+        <h1>Home</h1>
+        <div class="content-date">Last updated Nov 9th, 2021 at 7:12 P.M. (EST)</div>
+        <p>
+            Welcome to my page explaining how I solved the various stages of the Pacman
+            Problem that was first introduced by Berkeley. Georgia Tech had many interesting
+            twists for the problems, so I will explain them here
+        </p>
+    </div>
+</body>
+</html>
